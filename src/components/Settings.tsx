@@ -1,7 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { Key, Save, AlertCircle, Lock, Vault, CheckCircle, Clock, ArrowRight } from "lucide-react";
 import { supabase } from "../utils/supabaseClient";
 import { updateUserRetellApiKey } from "../utils/db";
+import {
+  Key,
+  Save,
+  Error,
+  Lock,
+  Security,
+  CheckCircle,
+  WatchLater,
+  ArrowForward,
+} from "@mui/icons-material";
+
+import TokenIcon from "@mui/icons-material/Token";
 
 const Settings: React.FC = () => {
   const [retellApiKey, setRetellApiKey] = useState("");
@@ -13,7 +24,9 @@ const Settings: React.FC = () => {
   useEffect(() => {
     const fetchApiKey = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         if (!user) throw new Error("No authenticated user found");
 
         const { data, error } = await supabase
@@ -42,7 +55,9 @@ const Settings: React.FC = () => {
     setSuccess(false);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) throw new Error("No authenticated user found");
 
       await updateUserRetellApiKey(user.id, retellApiKey);
@@ -62,24 +77,32 @@ const Settings: React.FC = () => {
   const toggleShowKey = () => setShowKey(!showKey);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-secondary">
       <div className="max-w-4xl mx-auto px-6 py-12">
-        {/* Header with subtle gradient text */}
+        {/* Header */}
         <div className="mb-12">
-          <h1 className="text-4xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 font-outfit">Settings</h1>
-          <p className="text-gray-600">Manage your account settings and API configurations</p>
+          <h1 className="text-4xl font-bold mb-2 text-black font-primary">
+            Settings
+          </h1>
+          <p className="text-black/70 font-primary">
+            Manage your account settings and API configurations
+          </p>
         </div>
 
-        {/* Settings Card with subtle shadow and animation */}
-        <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden transform transition-all duration-300 hover:shadow-lg">
-          <div className="p-6 border-b border-gray-50 bg-gray-50/50">
+        {/* Settings Card */}
+        <div className="bg-white rounded-2xl shadow-md border border-black/5 overflow-hidden transform transition-all duration-300 hover:shadow-lg">
+          <div className="p-6 border-b border-black/5 bg-black/[0.02]">
             <div className="flex items-center">
-              <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center transform transition-all duration-300 group-hover:scale-110">
-                <Vault className="w-5 h-5 text-blue-600" />
+              <div className="w-12 h-12 bg-custom-primary/10 rounded-xl flex items-center justify-center">
+                <TokenIcon sx={{ fontSize: 24 }} className="text-black" />
               </div>
               <div className="ml-4">
-                <h2 className="text-xl font-semibold text-gray-900">API Configuration</h2>
-                <p className="text-sm text-gray-600">Manage your Retell API credentials securely</p>
+                <h2 className="text-xl font-bold text-black font-primary">
+                  API Configuration
+                </h2>
+                <p className="text-sm text-black/70 font-primary">
+                  Manage your Retell API credentials securely
+                </p>
               </div>
             </div>
           </div>
@@ -87,8 +110,10 @@ const Settings: React.FC = () => {
           <form onSubmit={handleSubmit} className="p-8">
             <div className="space-y-6">
               <div>
-                <label htmlFor="retellApiKey" className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-                  <div className="h-4 w-4 mr-2 text-blue-500 text-xl" />
+                <label
+                  htmlFor="retellApiKey"
+                  className="block text-sm font-bold text-black mb-2 flex items-center font-primary"
+                >
                   Retell API Key
                 </label>
                 <div className="relative group">
@@ -97,42 +122,49 @@ const Settings: React.FC = () => {
                     id="retellApiKey"
                     value={retellApiKey}
                     onChange={(e) => setRetellApiKey(e.target.value)}
-                    className="block w-full pl-12 pr-16 py-3 bg-white border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 group-hover:border-blue-300"
+                    className="font-primary block w-full pl-12 pr-16 py-3 bg-white border border-black/10 rounded-xl shadow-sm focus:ring-2 focus:ring-black/20 focus:border-black transition-all duration-200 group-hover:border-black/20"
                     placeholder="Enter your Retell API Key"
                     required
                   />
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Key className="h-5 w-5 text-gray-500 group-hover:text-blue-500 transition-colors duration-200" />
+                    <Key
+                      sx={{ fontSize: 20 }}
+                      className="text-black/40 group-hover:text-black transition-colors duration-200"
+                    />
                   </div>
                   <button
                     type="button"
                     onClick={toggleShowKey}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 px-2 py-1 text-xs font-medium rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors duration-200"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 px-2 py-1 text-xs font-bold rounded-md bg-black/5 text-black/70 hover:bg-black/10 hover:text-black transition-colors duration-200 font-primary"
                   >
                     {showKey ? "Hide" : "Show"}
                   </button>
                 </div>
-                <p className="mt-2 text-sm text-gray-600 flex items-center">
-                  <Lock className="w-4 h-4 mr-1 text-gray-400" />
+                <p className="mt-2 text-sm text-black/60 flex items-center font-primary">
+                  <Lock sx={{ fontSize: 16 }} className="mr-1 text-black/40" />
                   Your API key is securely stored and encrypted
                 </p>
               </div>
 
               {error && (
-                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg animate-fade-in">
+                <div className="bg-custom-primary/10 border-l-4 border-custom-primary p-4 rounded-lg animate-fade-in">
                   <div className="flex">
-                    <AlertCircle className="h-5 w-5 text-red-500" />
-                    <p className="ml-3 text-sm text-red-700">{error}</p>
+                    <Error sx={{ fontSize: 20 }} className="text-black" />
+                    <p className="ml-3 text-sm text-black font-primary">
+                      {error}
+                    </p>
                   </div>
                 </div>
               )}
 
               {success && (
-                <div className="bg-emerald-50 border-l-4 border-emerald-500 p-4 rounded-lg animate-fade-in">
+                <div className="bg-custom-yellow/10 border-l-4 border-custom-yellow p-4 rounded-lg animate-fade-in">
                   <div className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-emerald-500" />
+                    <CheckCircle sx={{ fontSize: 20 }} className="text-black" />
                     <div className="ml-3">
-                      <p className="text-sm text-emerald-700">API key updated successfully!</p>
+                      <p className="text-sm text-black font-primary">
+                        API key updated successfully!
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -142,16 +174,19 @@ const Settings: React.FC = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-gray-900 to-gray-700 text-white rounded-xl font-medium text-sm hover:from-gray-800 hover:to-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 transition-all duration-200 shadow-sm hover:shadow transform hover:-translate-y-0.5"
+                  className="inline-flex items-center px-6 py-3 bg-black text-white rounded-xl font-bold text-sm hover:bg-black/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-50 transition-all duration-200 shadow-sm hover:shadow font-primary"
                 >
                   {loading ? (
                     <>
-                      <Clock className="h-4 w-4 mr-2 animate-spin" />
+                      <WatchLater
+                        sx={{ fontSize: 18 }}
+                        className="mr-2 animate-spin"
+                      />
                       Updating...
                     </>
                   ) : (
                     <>
-                      <Save className="h-4 w-4 mr-2" />
+                      <Save sx={{ fontSize: 18 }} className="mr-2" />
                       Save Changes
                     </>
                   )}

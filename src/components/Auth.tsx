@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../utils/supabaseClient";
-import { 
-  Mail, 
-  Lock, 
-  Key, 
-  Eye, 
-  EyeOff, 
-  ChevronRight, 
-  AlertCircle,
-  Loader,
+import {
+  Email,
+  Lock,
+  Key,
+  Visibility,
+  VisibilityOff,
+  ChevronRight,
+  Error,
   CheckCircle,
-  PhoneCall
-} from "lucide-react";
+  Call,
+} from "@mui/icons-material";
+import { CircularProgress } from "@mui/material";
 
 export default function Auth() {
   const [loading, setLoading] = useState(false);
@@ -20,7 +20,11 @@ export default function Auth() {
   const [retellApiKey, setRetellApiKey] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState<{email?: string; password?: string; api?: string}>({});
+  const [errors, setErrors] = useState<{
+    email?: string;
+    password?: string;
+    api?: string;
+  }>({});
   const [successMessage, setSuccessMessage] = useState("");
 
   // Animation helper to transition between forms
@@ -31,7 +35,7 @@ export default function Auth() {
   }, [isSignUp]);
 
   const validateForm = () => {
-    const newErrors: {email?: string; password?: string; api?: string} = {};
+    const newErrors: { email?: string; password?: string; api?: string } = {};
     let isValid = true;
 
     // Email validation
@@ -64,7 +68,7 @@ export default function Auth() {
 
   const handleAuth = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    
+
     // Validate form
     if (!validateForm()) {
       return;
@@ -97,9 +101,11 @@ export default function Auth() {
             ]);
 
           if (insertError) throw insertError;
-          
+
           // Show success message
-          setSuccessMessage("Account created successfully! Please check your email to verify your account.");
+          setSuccessMessage(
+            "Account created successfully! Please check your email to verify your account.",
+          );
           // Clear form
           setEmail("");
           setPassword("");
@@ -117,7 +123,7 @@ export default function Auth() {
       console.error("Authentication error:", error);
       setErrors({
         ...errors,
-        email: error.message || "Authentication failed"
+        email: error.message || "Authentication failed",
       });
     } finally {
       setLoading(false);
@@ -125,73 +131,91 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white flex items-center justify-center p-6">
+    <div className="min-h-screen bg-secondary flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div className="w-full max-w-md">
-          <div className="bg-white shadow-xl rounded-2xl p-8 relative overflow-hidden border border-gray-100">
+          <div className="bg-white shadow-lg rounded-2xl p-8 relative overflow-hidden border border-black/5">
             {/* Logo and Title */}
             <div className="text-center mb-8">
               <div className="flex items-center justify-center mb-6">
-                <div className="relative flex items-center justify-center w-12 h-12 bg-black/5 rounded-xl">
-                  <img src="/recall-logo-black.png" alt="Recall" className="w-10 h-10 object-contain" />
-                  <div className="absolute inset-0 rounded-xl ring-1 ring-black/10"></div>
+                <div className="relative flex items-center justify-center w-12 h-12 bg-black rounded-xl">
+                  <img
+                    src="/recall-logo-black.png"
+                    alt="Recall"
+                    className="w-10 h-10 object-contain invert"
+                  />
                 </div>
-                <span className="font-['Outfit'] text-3xl font-bold text-black ml-3">Recall</span>
+                <span className="font-primary text-3xl font-bold text-black ml-3">
+                  Recall
+                </span>
               </div>
-            
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+
+              <h2 className="text-2xl font-bold text-black mb-2 font-primary">
                 {isSignUp ? "Create an Account" : "Welcome Back"}
               </h2>
-              <p className="text-gray-600 mt-2">
-                {isSignUp ? "Sign up to get started with AI Caller" : "Sign in to access your account"}
+              <p className="text-black/70 mt-2 font-primary">
+                {isSignUp
+                  ? "Sign up to get started with AI Caller"
+                  : "Sign in to access your account"}
               </p>
             </div>
-            
+
             {/* Success message */}
             {successMessage && (
-              <div className="mb-6 bg-green-50 text-green-700 p-4 rounded-lg flex items-start">
-                <CheckCircle className="h-5 w-5 mr-3 mt-0.5 flex-shrink-0" />
-                <p className="text-sm">{successMessage}</p>
+              <div className="mb-6 bg-custom-yellow/10 text-black p-4 rounded-lg flex items-start">
+                <CheckCircle className="h-5 w-5 mr-3 mt-0.5 flex-shrink-0 text-black" />
+                <p className="text-sm font-primary">{successMessage}</p>
               </div>
             )}
-            
+
             <form onSubmit={handleAuth} className="space-y-6">
               {/* Email field */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="email">
+                <label
+                  className="block text-sm font-bold text-black mb-1 font-primary"
+                  htmlFor="email"
+                >
                   Email Address
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Mail className="h-5 w-5 text-gray-400" />
+                    <Email sx={{ fontSize: 20 }} className="text-black/40" />
                   </div>
-                  <input 
+                  <input
                     id="email"
                     type="email"
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className={`block w-full pl-10 pr-3 py-3 text-gray-900 border ${
-                      errors.email ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'
+                    className={`font-primary block w-full pl-10 pr-3 py-3 text-black border ${
+                      errors.email
+                        ? "border-custom-primary focus:ring-custom-primary focus:border-custom-primary"
+                        : "border-black/10 focus:ring-black focus:border-black"
                     } rounded-lg transition-colors shadow-sm`}
                   />
                 </div>
                 {errors.email && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                    <AlertCircle className="h-4 w-4 mr-1" />
+                  <p className="mt-1 text-sm text-black flex items-center font-primary">
+                    <Error
+                      sx={{ fontSize: 16 }}
+                      className="mr-1 text-custom-primary"
+                    />
                     {errors.email}
                   </p>
                 )}
               </div>
-              
+
               {/* Password field */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="password">
+                <label
+                  className="block text-sm font-bold text-black mb-1 font-primary"
+                  htmlFor="password"
+                >
                   Password
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock className="h-5 w-5 text-gray-400" />
+                    <Lock sx={{ fontSize: 20 }} className="text-black/40" />
                   </div>
                   <input
                     id="password"
@@ -199,21 +223,30 @@ export default function Auth() {
                     placeholder="••••••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className={`block w-full pl-10 pr-10 py-3 text-gray-900 border ${
-                      errors.password ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'
+                    className={`font-primary block w-full pl-10 pr-10 py-3 text-black border ${
+                      errors.password
+                        ? "border-custom-primary focus:ring-custom-primary focus:border-custom-primary"
+                        : "border-black/10 focus:ring-black focus:border-black"
                     } rounded-lg transition-colors shadow-sm`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-black/40 hover:text-black/60"
                   >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    {showPassword ? (
+                      <VisibilityOff sx={{ fontSize: 20 }} />
+                    ) : (
+                      <Visibility sx={{ fontSize: 20 }} />
+                    )}
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                    <AlertCircle className="h-4 w-4 mr-1" />
+                  <p className="mt-1 text-sm text-black flex items-center font-primary">
+                    <Error
+                      sx={{ fontSize: 16 }}
+                      className="mr-1 text-custom-primary"
+                    />
                     {errors.password}
                   </p>
                 )}
@@ -221,23 +254,26 @@ export default function Auth() {
                   <div className="mt-1">
                     <button
                       type="button"
-                      className="text-sm text-indigo-600 hover:text-indigo-800 transition-colors"
+                      className="text-sm text-black/70 hover:text-black transition-colors font-primary"
                     >
                       Forgot password?
                     </button>
                   </div>
                 )}
               </div>
-              
+
               {/* Retell API Key field (only for signup) */}
               {isSignUp && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="retellApiKey">
+                  <label
+                    className="block text-sm font-bold text-black mb-1 font-primary"
+                    htmlFor="retellApiKey"
+                  >
                     Retell API Key
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Key className="h-5 w-5 text-gray-400" />
+                      <Key sx={{ fontSize: 20 }} className="text-black/40" />
                     </div>
                     <input
                       id="retellApiKey"
@@ -245,51 +281,53 @@ export default function Auth() {
                       placeholder="Enter your Retell API Key"
                       value={retellApiKey}
                       onChange={(e) => setRetellApiKey(e.target.value)}
-                      className={`block w-full pl-10 pr-3 py-3 text-gray-900 border ${
-                        errors.api ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'
+                      className={`font-primary block w-full pl-10 pr-3 py-3 text-black border ${
+                        errors.api
+                          ? "border-custom-primary focus:ring-custom-primary focus:border-custom-primary"
+                          : "border-black/10 focus:ring-black focus:border-black"
                       } rounded-lg transition-colors shadow-sm`}
                     />
                   </div>
                   {errors.api && (
-                    <p className="mt-1 text-sm text-red-600 flex items-center">
-                      <AlertCircle className="h-4 w-4 mr-1" />
+                    <p className="mt-1 text-sm text-custom-primary flex items-center font-primary">
+                      <Error sx={{ fontSize: 16 }} className="mr-1" />
                       {errors.api}
                     </p>
                   )}
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1 text-xs text-black/50 font-primary">
                     You can get your API key from the Retell dashboard
                   </p>
                 </div>
               )}
-              
+
               {/* Auth buttons */}
               <div>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex items-center justify-center bg-gradient-to-r from-indigo-600 to-blue-600 text-white py-2.5 px-4 rounded-lg hover:from-indigo-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 font-medium shadow-sm hover:shadow"
+                  className="w-full flex items-center justify-center bg-custom-primary text-white py-3 px-4 rounded-lg hover:bg-custom-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-primary font-medium shadow-sm hover:shadow transition-all duration-200 font-primary"
                 >
                   {loading ? (
                     <>
-                      <Loader className="h-5 w-5 mr-2 animate-spin" />
+                      <CircularProgress size={20} className="mr-2 text-white" />
                       Processing...
                     </>
                   ) : (
                     <>
                       {isSignUp ? "Create Account" : "Sign In"}
-                      <ChevronRight className="h-5 w-5 ml-2" />
+                      <ChevronRight sx={{ fontSize: 20 }} className="ml-2" />
                     </>
                   )}
                 </button>
               </div>
             </form>
-            
+
             {/* Toggle between signup and login */}
             <div className="mt-8 text-center">
               <button
                 type="button"
                 onClick={() => setIsSignUp(!isSignUp)}
-                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                className="text-sm text-black/70 hover:text-black transition-colors font-primary font-bold"
               >
                 {isSignUp
                   ? "Already have an account? Sign in"

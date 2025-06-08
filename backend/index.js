@@ -258,45 +258,14 @@ app.post("/status_lemon_squeezy_payment", async (req, res) => {
   }
 });
 
-// Endpoint to update campaign status
-app.post("/api/update-campaign-status", async (req, res) => {
-  const { campaignId, status } = req.body;
-
-  if (!campaignId || !status) {
-    return res.status(400).json({ error: "Invalid campaign ID or status" });
-  }
-
+const startBulkDialingProcess = async (
+  campaignId,
+  userId,
+  contactsToCall = null,
+  resuming = false,
+) => {
   try {
-    const { data, error } = await supabase
-      .from("campaigns")
-      .update({ status })
-      .eq("id", campaignId);
-
-    if (error) {
-      console.error("Error updating campaign status:", error.message);
-      return res.status(500).json({ error: "Error updating campaign status" });
-    }
-
-    res.json({ success: true, message: "Campaign status updated", data });
-  } catch (error) {
-    console.error("Error updating campaign status:", error.message);
-    res.status(500).json({ error: "Error updating campaign status" });
-  }
-});
-
-// Modify the bulk dialing endpoint
-app.post("/api/start-bulk-dialing", async (req, res) => {
-  const { campaignId, userId } = req.body;
-
-  console.log("Request received for campaign ID:", campaignId);
-
-  if (!campaignId || !userId) {
-    console.error("Invalid campaign ID or user ID");
-    return res.status(400).json({ error: "Invalid campaign ID or user ID" });
-  }
-
-  try {
-    // Fetch campaign data
+    // Always fetch the LATEST campaign data to ensure we have the most recent settings
     const { data: campaign, error: campaignError } = await supabase
       .from("campaigns")
       .select("*")
@@ -305,26 +274,55 @@ app.post("/api/start-bulk-dialing", async (req, res) => {
 
     if (campaignError || !campaign) {
       console.error("Campaign not found:", campaignError?.message);
-      return res.status(404).json({ error: "Campaign not found" });
+      return { success: false, error: "Campaign not found" };
     }
 
     // Get user's Retell API key
     const retellApiKey = await getUserRetellApiKey(userId);
     if (!retellApiKey) {
-      return res
-        .status(400)
-        .json({ error: "Retell API key not found for user" });
+      return { success: false, error: "Retell API key not found for user" };
     }
 
-    // Fetch contacts
-    const contacts = await getContacts(campaignId);
-    const contactsToCall = contacts.filter((contact) => !contact.callId);
+    // If contactsToCall wasn't provided, fetch all contacts that haven't been called yet
+    if (!contactsToCall) {
+      const contacts = await getContacts(campaignId);
+      contactsToCall = contacts.filter((contact) => !contact.callId);
+    }
 
     if (!contactsToCall.length) {
       console.error("No contacts to call for campaign:", campaignId);
-      return res
-        .status(400)
-        .json({ error: "No contacts to call for this campaign" });
+      return { success: false, error: "No contacts to call for this campaign" };
+    }
+
+    // Get ALL contacts for this campaign
+    const { data: allContacts, error: allContactsError } = await supabase
+      .from("contacts")
+      .select("*")
+      .eq("campaignId", campaignId);
+
+    if (allContactsError) {
+      console.error("Error fetching all contacts:", allContactsError.message);
+      return { success: false, error: "Error fetching all contacts" };
+    }
+
+    // Calculate how many have already been called
+    const totalContacts = allContacts.length;
+    const alreadyCalledCount = allContacts.filter((c) => c.callId).length;
+
+    // Initialize with already-called contacts if resuming
+    let calledCount = resuming ? alreadyCalledCount : 0;
+
+    console.log(
+      `Starting campaign with ${calledCount}/${totalContacts} already called (${resuming ? "resuming" : "new campaign"})`,
+    );
+
+    // If resuming, immediately update the progress to reflect already called contacts
+    if (resuming) {
+      const initialProgress = Math.round((calledCount / totalContacts) * 100);
+      console.log(
+        `Setting initial progress to ${initialProgress}% for resumed campaign`,
+      );
+      await updateCampaign(campaignId, { progress: initialProgress });
     }
 
     // Check user's dialing credits
@@ -336,20 +334,18 @@ app.post("/api/start-bulk-dialing", async (req, res) => {
 
     if (userError) {
       console.error("Error fetching user data:", userError.message);
-      return res.status(500).json({ error: "Error fetching user data" });
+      return { success: false, error: "Error fetching user data" };
     }
 
     let userCredits = userData.dialing_credits;
     if (userCredits < contactsToCall.length) {
       const purchaseLink = `https://darwizpayment.edsplore.com/buy/628a4a2e-44f5-42f5-9565-489d58f52de4?checkout[custom][user_id]=${userId}`;
-      return res.status(402).json({
+      return {
+        success: false,
         error: "Insufficient dialing credits",
         purchaseLink: purchaseLink,
-      });
+      };
     }
-
-    let calledCount = 0;
-    const totalContacts = contactsToCall.length;
 
     console.log(
       `Updating campaign ${campaign.id} status to 'In Progress' and setting hasRun to true`,
@@ -380,44 +376,52 @@ app.post("/api/start-bulk-dialing", async (req, res) => {
     // Start bulk dialing in background
     (async () => {
       while (contactQueue.length > 0) {
-        // Fetch the latest campaign status
-        const { data: updatedCampaign, error: campaignError } = await supabase
+        // CRITICAL: Fetch the latest campaign data to always use up-to-date settings
+        const { data: latestCampaign, error: campaignError } = await supabase
           .from("campaigns")
-          .select("status")
+          .select("*") // Select ALL fields to get latest settings
           .eq("id", campaignId)
           .single();
 
         if (campaignError) {
-          console.error(
-            "Error fetching campaign status:",
-            campaignError.message,
-          );
+          console.error("Error fetching campaign data:", campaignError.message);
           break;
         }
 
-        if (updatedCampaign.status === "Paused") {
+        // Use the latest campaign data (settings may have been edited)
+        const currentCampaign = latestCampaign;
+
+        if (currentCampaign.status === "Paused") {
           console.log("Campaign is paused. Waiting to resume...");
           // Wait until the campaign status changes from 'Paused'
           while (true) {
             await new Promise((resolve) => setTimeout(resolve, 5000));
+
             const { data: checkCampaign, error: checkError } = await supabase
               .from("campaigns")
-              .select("status")
+              .select("*") // Select ALL fields to get the latest settings
               .eq("id", campaignId)
               .single();
 
             if (checkError) {
               console.error(
-                "Error fetching campaign status:",
+                "Error fetching campaign data:",
                 checkError.message,
               );
               break;
             }
+
             if (checkCampaign.status !== "Paused") {
-              console.log("Campaign resumed. Continuing bulk dialing...");
+              console.log(
+                "Campaign resumed. Continuing with latest settings...",
+              );
               break;
             }
           }
+
+          // Don't continue processing this batch - go back to the beginning of the loop
+          // to fetch the latest campaign data again after resuming
+          continue;
         }
 
         // Check current concurrency
@@ -469,7 +473,7 @@ app.post("/api/start-bulk-dialing", async (req, res) => {
                 const newProgress = Math.round(
                   (calledCount / totalContacts) * 100,
                 );
-                await updateCampaign(campaign.id, { progress: newProgress });
+                await updateCampaign(campaignId, { progress: newProgress });
                 return;
               }
 
@@ -506,9 +510,9 @@ app.post("/api/start-bulk-dialing", async (req, res) => {
                 return;
               }
 
-              // Determine which outbound number to use
-              let outboundNumber = campaign.outboundNumber;
-              if (campaign.localTouchEnabled && numberMatchingGroups) {
+              // CRITICAL: Use the currentCampaign settings (latest from database)
+              let outboundNumber = currentCampaign.outboundNumber;
+              if (currentCampaign.localTouchEnabled && numberMatchingGroups) {
                 // Find the best matching number from the groups
                 for (const [
                   number,
@@ -522,12 +526,14 @@ app.post("/api/start-bulk-dialing", async (req, res) => {
               }
 
               console.log(
-                `Attempting to create call for contact ${contact.firstName} (${contact.phoneNumber}) using outbound number ${outboundNumber}`,
+                `Attempting to create call for contact ${contact.firstName} (${contact.phoneNumber}) using outbound number ${outboundNumber} and agent ${currentCampaign.agentId}`,
               );
+
+              // CRITICAL: Use currentCampaign.agentId - the latest from database
               const callResponse = await createPhoneCall(
                 outboundNumber,
                 contact.phoneNumber,
-                campaign.agentId,
+                currentCampaign.agentId, // Use latest agent ID
                 contact.firstName,
                 retellApiKey,
                 contact.id,
@@ -565,12 +571,12 @@ app.post("/api/start-bulk-dialing", async (req, res) => {
 
                 // Ensure database updates are awaited
                 await Promise.all([
-                  updateCampaign(campaign.id, { progress: newProgress }),
+                  updateCampaign(campaignId, { progress: newProgress }),
                   updateContact(contact.id, {
                     callId: callResponse.call_id,
                   }),
                   addCallLog({
-                    campaignId: campaign.id,
+                    campaignId: campaignId,
                     phoneNumber: contact.phoneNumber,
                     firstName: contact.firstName,
                     callId: callResponse.call_id,
@@ -601,7 +607,7 @@ app.post("/api/start-bulk-dialing", async (req, res) => {
         } catch (error) {
           if (error.message.includes("Insufficient credits")) {
             console.error("Campaign stopped due to insufficient credits");
-            await updateCampaign(campaign.id, {
+            await updateCampaign(campaignId, {
               status: "Paused",
               progress: Math.round((calledCount / totalContacts) * 100),
             });
@@ -616,10 +622,144 @@ app.post("/api/start-bulk-dialing", async (req, res) => {
       }
 
       console.log(
-        `All contacts processed. Updating campaign ${campaign.id} status to 'Completed' and progress to 100%`,
+        `All contacts processed. Updating campaign ${campaignId} status to 'Completed' and progress to 100%`,
       );
-      await updateCampaign(campaign.id, { status: "Completed", progress: 100 });
+      await updateCampaign(campaignId, { status: "Completed", progress: 100 });
     })();
+
+    return { success: true, message: "Bulk dialing started successfully" };
+  } catch (error) {
+    console.error("Error during bulk dialing:", error.message);
+    return { success: false, error: "An error occurred during bulk dialing" };
+  }
+};
+
+app.post("/api/update-campaign-status", async (req, res) => {
+  const { campaignId, status, userId, isResuming } = req.body;
+
+  if (!campaignId || !status) {
+    return res.status(400).json({ error: "Invalid campaign ID or status" });
+  }
+
+  try {
+    // First update the campaign status
+    const { data, error } = await supabase
+      .from("campaigns")
+      .update({ status })
+      .eq("id", campaignId);
+
+    if (error) {
+      console.error("Error updating campaign status:", error.message);
+      return res.status(500).json({ error: "Error updating campaign status" });
+    }
+
+    // If this is a resume operation, restart the bulk dialing process
+    if (isResuming && userId) {
+      console.log(`Resuming campaign ${campaignId}`);
+
+      // Create a background process to restart dialing
+      setTimeout(async () => {
+        try {
+          // Fetch all contacts for the campaign
+          const contacts = await getContacts(campaignId);
+
+          // First filter: contacts without callId
+          let contactsToCall = contacts.filter((contact) => !contact.callId);
+
+          // Second filter: check call_logs to avoid duplicate calls
+          const { data: callLogs, error: callLogsError } = await supabase
+            .from("call_logs")
+            .select("contactId")
+            .eq("campaignId", campaignId);
+
+          if (callLogsError) {
+            console.error("Error fetching call logs:", callLogsError.message);
+            throw callLogsError;
+          }
+
+          // Create a Set of contactIds that already have call logs
+          if (callLogs && callLogs.length > 0) {
+            const contactIdsWithLogs = new Set(
+              callLogs.map((log) => log.contactId),
+            );
+
+            // Filter out contacts that already have a call log
+            contactsToCall = contactsToCall.filter(
+              (contact) => !contactIdsWithLogs.has(contact.id),
+            );
+          }
+
+          console.log(
+            `Found ${contactsToCall.length} contacts remaining to be called for campaign ${campaignId}`,
+          );
+
+          if (contactsToCall.length === 0) {
+            console.log(
+              `No contacts remaining to call for campaign ${campaignId}`,
+            );
+            // Update the campaign to completed if there are no contacts to call
+            await updateCampaign(campaignId, {
+              status: "Completed",
+              progress: 100,
+            });
+            return;
+          }
+
+          // Restart the bulk dialing process with the remaining contacts
+          const result = await startBulkDialingProcess(
+            campaignId,
+            userId,
+            contactsToCall,
+            true, // This flag tells the function we're resuming
+          );
+
+          if (!result.success) {
+            console.error(
+              `Failed to resume campaign ${campaignId}:`,
+              result.error,
+            );
+          }
+        } catch (err) {
+          console.error(`Error resuming campaign ${campaignId}:`, err);
+        }
+      }, 0);
+    }
+
+    res.json({ success: true, message: "Campaign status updated", data });
+  } catch (error) {
+    console.error("Error updating campaign status:", error.message);
+    res.status(500).json({ error: "Error updating campaign status" });
+  }
+});
+
+app.post("/api/start-bulk-dialing", async (req, res) => {
+  const { campaignId, userId } = req.body;
+
+  console.log("Request received for campaign ID:", campaignId);
+
+  if (!campaignId || !userId) {
+    console.error("Invalid campaign ID or user ID");
+    return res.status(400).json({ error: "Invalid campaign ID or user ID" });
+  }
+
+  try {
+    // Call the helper function to start the bulk dialing process
+    const result = await startBulkDialingProcess(campaignId, userId);
+
+    if (!result.success) {
+      // Handle special errors like insufficient credits
+      if (
+        result.error === "Insufficient dialing credits" &&
+        result.purchaseLink
+      ) {
+        return res.status(402).json({
+          error: result.error,
+          purchaseLink: result.purchaseLink,
+        });
+      }
+
+      return res.status(400).json({ error: result.error });
+    }
 
     res.json({ success: true, message: "Bulk dialing started successfully" });
   } catch (error) {
@@ -1105,6 +1245,217 @@ app.put("/api/retell-api-key/:userId", async (req, res) => {
   } catch (error) {
     console.error("Error updating Retell API key:", error);
     res.status(500).json({ error: "Failed to update Retell API key" });
+  }
+});
+
+app.get("/api/call-logs/:campaignId/paginated", async (req, res) => {
+  try {
+    const { campaignId } = req.params;
+    const {
+      page = 1,
+      page_size = 10,
+      sort_field = "id",
+      sort_direction = "desc",
+    } = req.query;
+
+    // Convert to numbers
+    const pageNum = parseInt(page);
+    const pageSizeNum = parseInt(page_size);
+
+    // Calculate range for Supabase
+    const start = (pageNum - 1) * pageSizeNum;
+    const end = start + pageSizeNum - 1;
+
+    console.log(
+      `Fetching call logs for campaign ${campaignId}, page ${pageNum}, size ${pageSizeNum}`,
+    );
+    console.log(`Sorting by ${sort_field} ${sort_direction}`);
+
+    // First get total count with detailed logging
+    const countQuery = supabase
+      .from("call_logs")
+      .select("id", { count: "exact", head: true })
+      .eq("campaignId", campaignId);
+
+    const { count, error: countError } = await countQuery;
+
+    if (countError) {
+      console.error("Error getting count:", countError);
+      throw countError;
+    }
+
+    console.log(`Total records found: ${count}`);
+
+    // Prepare query for fetching data with range
+    let query = supabase
+      .from("call_logs")
+      .select("*")
+      .eq("campaignId", campaignId);
+
+    // Special handling for call_duration to handle both NULLs and zeros
+    if (sort_field === "call_duration") {
+      // For PostgreSQL, we need to use a custom RPC function to handle both NULL and zero values
+      // Create this function in your Supabase database:
+      /*
+      CREATE OR REPLACE FUNCTION sort_call_logs_with_unknown(
+        p_campaign_id INT,
+        p_sort_direction TEXT DEFAULT 'desc',
+        p_limit INT DEFAULT 10,
+        p_offset INT DEFAULT 0
+      ) RETURNS SETOF call_logs AS $$
+      BEGIN
+        RETURN QUERY
+        SELECT *
+        FROM call_logs
+        WHERE "campaignId" = p_campaign_id
+        ORDER BY 
+          -- First criterion: Put "unknown" rows at the bottom
+          CASE 
+            WHEN disconnection_reason IS NULL OR disconnection_reason = '' OR disconnection_reason = 'unknown' THEN 1
+            ELSE 0
+          END,
+          -- Second criterion: For non-unknown rows, sort by call_duration
+          CASE 
+            WHEN p_sort_direction = 'asc' THEN call_duration
+            ELSE -call_duration  -- Negate for descending order
+          END NULLS LAST
+        LIMIT p_limit
+        OFFSET p_offset;
+      END;
+      $$ LANGUAGE plpgsql;
+      */
+
+      // Use the RPC function if you have it in your database
+      try {
+        const { data: sortedData, error: sortError } = await supabase.rpc(
+          "sort_call_logs_with_unknown",
+          {
+            p_campaign_id: parseInt(campaignId),
+            p_sort_direction: sort_direction,
+            p_limit: pageSizeNum,
+            p_offset: start,
+          },
+        );
+
+        if (!sortError) {
+          // Send response with data and pagination info
+          return res.json({
+            data: sortedData || [],
+            pagination: {
+              total: count,
+              page: pageNum,
+              page_size: pageSizeNum,
+              total_pages: Math.ceil(count / pageSizeNum),
+            },
+          });
+        } else {
+          console.log(
+            "RPC error, falling back to client-side sorting:",
+            sortError,
+          );
+          // Fall back to client-side sorting if RPC fails
+        }
+      } catch (rpcError) {
+        console.log(
+          "RPC not available, using fallback sorting method",
+          rpcError,
+        );
+        // Continue with fallback method
+      }
+
+      // Fallback method using Supabase's order options and post-processing
+      // Get all records for client-side sorting
+      const { data: allData, error: allDataError } = await supabase
+        .from("call_logs")
+        .select("*")
+        .eq("campaignId", campaignId);
+
+      if (allDataError) {
+        console.error(
+          "Error fetching all data for client-side sorting:",
+          allDataError,
+        );
+        throw allDataError;
+      }
+
+      // Sort client-side
+      const sortedData = allData.sort((a, b) => {
+        // First priority: unknown disconnection_reason at the bottom
+        const aUnknown =
+          !a.disconnection_reason ||
+          a.disconnection_reason === "" ||
+          a.disconnection_reason === "unknown";
+        const bUnknown =
+          !b.disconnection_reason ||
+          b.disconnection_reason === "" ||
+          b.disconnection_reason === "unknown";
+
+        if (aUnknown && !bUnknown) return 1; // a goes to bottom
+        if (!aUnknown && bUnknown) return -1; // b goes to bottom
+
+        // If both are unknown or both are not unknown, sort by duration
+        if (sort_direction === "asc") {
+          // For ascending sort
+          if (a.call_duration === null) return 1;
+          if (b.call_duration === null) return -1;
+          return a.call_duration - b.call_duration;
+        } else {
+          // For descending sort
+          if (a.call_duration === null) return 1;
+          if (b.call_duration === null) return -1;
+          return b.call_duration - a.call_duration;
+        }
+      });
+
+      // Paginate the sorted results in memory
+      const paginatedData = sortedData.slice(start, end + 1);
+
+      // Return the paginated, sorted data
+      return res.json({
+        data: paginatedData || [],
+        pagination: {
+          total: count,
+          page: pageNum,
+          page_size: pageSizeNum,
+          total_pages: Math.ceil(count / pageSizeNum),
+        },
+      });
+    } else {
+      // For other fields, use standard Supabase ordering
+      query = query.order(sort_field, {
+        ascending: sort_direction === "asc",
+      });
+
+      // Apply range after sorting
+      query = query.range(start, end);
+
+      // Execute the query
+      const { data, error } = await query;
+
+      if (error) {
+        console.error("Error fetching data:", error);
+        throw error;
+      }
+
+      console.log(`Fetched ${data?.length || 0} records for the current page`);
+
+      // Send response with data and pagination info
+      res.json({
+        data: data || [],
+        pagination: {
+          total: count,
+          page: pageNum,
+          page_size: pageSizeNum,
+          total_pages: Math.ceil(count / pageSizeNum),
+        },
+      });
+    }
+  } catch (error) {
+    console.error("Error fetching paginated call logs:", error);
+    res.status(500).json({
+      error: "Failed to fetch call logs",
+      details: error.message,
+    });
   }
 });
 

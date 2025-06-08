@@ -1,6 +1,6 @@
 import { supabase } from "./supabaseClient";
 
-const API_URL = "https://5cc0a660-34a6-48ba-bb1b-137d614d8813-00-1uwntfr4otxpr.sisko.replit.dev";
+const API_URL = "https://recall-backend.replit.app";
 
 export interface Contact {
   id?: number;

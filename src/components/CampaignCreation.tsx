@@ -10,18 +10,18 @@ import {
 } from "../utils/db";
 import { fetchAgents, fetchPhoneNumbers } from "../utils/retellApi";
 import {
-  FileText,
-  User,
-  Upload,
-  AlertCircle,
-  SmartphoneCharging,
-  Bug,
-  Table,
-  CheckSquare,
+  Description,
+  Person,
+  CloudUpload,
+  Error,
+  PhoneIphone,
+  BugReport,
+  TableChart,
+  CheckBox,
   Phone,
   Info,
-  Speech
-} from "lucide-react";
+  RecordVoiceOver,
+} from "@mui/icons-material";
 import { useDropzone } from "react-dropzone";
 import { supabase } from "../utils/supabaseClient";
 
@@ -41,59 +41,59 @@ interface EnhancedContact extends Omit<Contact, "id" | "campaignId"> {
 }
 
 const ExcelFormatExample = () => (
-  <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 overflow-x-auto">
-    <table className="min-w-full divide-y divide-gray-200">
-      <thead className="bg-gray-50">
+  <div className="bg-white p-4 rounded-lg shadow-sm border border-black/5 overflow-x-auto">
+    <table className="min-w-full divide-y divide-black/10">
+      <thead className="bg-black/[0.02]">
         <tr>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+          <th className="px-5 py-3 text-left text-xs font-bold text-black/60 tracking-wider font-primary">
             Phone
           </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+          <th className="px-5 py-3 text-left text-xs font-bold text-black/60 tracking-wider font-primary">
             Name
           </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+          <th className="px-5 py-3 text-left text-xs font-bold text-black/60 tracking-wider font-primary">
             Email
           </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+          <th className="px-5 py-3 text-left text-xs font-bold text-black/60 tracking-wider font-primary">
             Gender
           </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+          <th className="px-5 py-3 text-left text-xs font-bold text-black/60 tracking-wider font-primary">
             Column_Name
           </th>
         </tr>
       </thead>
-      <tbody className="bg-white divide-y divide-gray-200">
+      <tbody className="bg-white divide-y divide-black/5">
         <tr>
-          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+          <td className="px-5 py-3 whitespace-nowrap text-sm text-black/70 font-primary">
             11223344556
           </td>
-          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+          <td className="px-5 py-3 whitespace-nowrap text-sm text-black/70 font-primary">
             John
           </td>
-          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+          <td className="px-5 py-3 whitespace-nowrap text-sm text-black/70 font-primary">
             john@mail.com
           </td>
-          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+          <td className="px-5 py-3 whitespace-nowrap text-sm text-black/70 font-primary">
             Male
           </td>
-          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+          <td className="px-5 py-3 whitespace-nowrap text-sm text-black/70 font-primary">
             Value1
           </td>
         </tr>
         <tr>
-          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+          <td className="px-5 py-3 whitespace-nowrap text-sm text-black/70 font-primary">
             12334445678
           </td>
-          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+          <td className="px-5 py-3 whitespace-nowrap text-sm text-black/70 font-primary">
             Mary
           </td>
-          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+          <td className="px-5 py-3 whitespace-nowrap text-sm text-black/70 font-primary">
             mary@mail.com
           </td>
-          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+          <td className="px-5 py-3 whitespace-nowrap text-sm text-black/70 font-primary">
             Female
           </td>
-          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+          <td className="px-5 py-3 whitespace-nowrap text-sm text-black/70 font-primary">
             Value2
           </td>
         </tr>
@@ -281,38 +281,49 @@ const CampaignCreation: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="flex justify-center items-center h-screen bg-secondary">
+        <div className="w-16 h-16 border-4 border-t-custom-primary border-custom-primary/10 rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-secondary">
       <div className="max-w-6xl mx-auto px-6 py-12">
         {/* Header Section */}
-        <div className="mb-12">
-          <div className="inline-block mb-4">
-            <div className="flex items-center px-4 py-1.5 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 text-blue-800 rounded-full text-xs font-semibold tracking-wider border border-blue-200">
-              <Speech className="w-4 h-4 mr-2 text-blue-600" />
+        <div className="mb-10">
+          <div className="mb-4 inline-block">
+            <div className="flex items-center px-4 py-1.5 bg-custom-primary/10 text-black rounded-full text-xs font-bold tracking-wider border border-custom-primary/20 font-primary">
+              <RecordVoiceOver sx={{ fontSize: 16 }} className="mr-2" />
               NEW CAMPAIGN
             </div>
           </div>
-          <h1 className="text-4xl font-bold mb-2 text-gray-900">Create Campaign</h1>
-          <p className="text-lg text-gray-600">Set up your new outbound calling campaign</p>
+          <h1 className="text-4xl font-bold mb-2 text-black font-primary">
+            Create Campaign
+          </h1>
+          <p className="text-lg text-black/70 font-primary">
+            Set up your new outbound calling campaign
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Campaign Details Card */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="p-6 border-b border-gray-100 bg-gray-50">
+          <div className="bg-white rounded-xl shadow-sm border border-black/5 overflow-hidden">
+            <div className="p-5 border-b border-black/5 bg-black/[0.02]">
               <div className="flex items-center">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <Speech className="w-6 h-6 text-blue-600" />
+                <div className="w-12 h-12 bg-custom-primary/10 rounded-xl flex items-center justify-center">
+                  <RecordVoiceOver
+                    sx={{ fontSize: 24 }}
+                    className="text-black"
+                  />
                 </div>
                 <div className="ml-4">
-                  <h2 className="text-xl font-semibold text-gray-900">Campaign Details</h2>
-                  <p className="text-sm text-gray-600">Configure your campaign settings</p>
+                  <h2 className="text-xl font-bold text-black font-primary">
+                    Campaign Details
+                  </h2>
+                  <p className="text-sm text-black/70 font-primary">
+                    Configure your campaign settings
+                  </p>
                 </div>
               </div>
             </div>
@@ -322,7 +333,7 @@ const CampaignCreation: React.FC = () => {
                 <div>
                   <label
                     htmlFor="title"
-                    className="block text-sm font-medium text-gray-700 mb-2"
+                    className="block text-sm font-bold text-black mb-2 font-primary"
                   >
                     Campaign Title
                   </label>
@@ -332,7 +343,7 @@ const CampaignCreation: React.FC = () => {
                       id="title"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
-                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+                      className="font-primary w-full px-4 py-3 bg-white border border-black/10 rounded-lg focus:ring-2 focus:ring-black/20 focus:border-black transition-all duration-200"
                       placeholder="Enter a descriptive title for your campaign"
                       required
                     />
@@ -342,16 +353,16 @@ const CampaignCreation: React.FC = () => {
                 <div>
                   <label
                     htmlFor="agentId"
-                    className="block text-sm font-medium text-gray-700 mb-2"
+                    className="block text-sm font-bold text-black mb-2 font-primary"
                   >
-                    Select Agent <span className="text-red-500">*</span>
+                    Select Agent <span className="text-custom-primary">*</span>
                   </label>
                   <div className="relative">
                     <select
                       id="agentId"
                       value={agentId}
                       onChange={(e) => setAgentId(e.target.value)}
-                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 appearance-none"
+                      className="font-primary w-full px-4 py-3 bg-white border border-black/10 rounded-lg focus:ring-2 focus:ring-black/20 focus:border-black transition-all duration-200 appearance-none"
                       required
                     >
                       <option value="">Choose an AI agent</option>
@@ -362,12 +373,15 @@ const CampaignCreation: React.FC = () => {
                       ))}
                     </select>
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                      <User className="w-5 h-5 text-gray-400" />
+                      <Person sx={{ fontSize: 20 }} className="text-black/40" />
                     </div>
                   </div>
                   {agents.length === 0 && (
-                    <p className="mt-2 text-sm text-amber-600 flex items-center">
-                      <AlertCircle className="h-4 w-4 mr-1" />
+                    <p className="mt-2 text-sm text-black flex items-center font-primary">
+                      <Error
+                        sx={{ fontSize: 16 }}
+                        className="mr-1 text-custom-orange"
+                      />
                       No agents found. Please create an agent first.
                     </p>
                   )}
@@ -376,7 +390,7 @@ const CampaignCreation: React.FC = () => {
                 <div>
                   <label
                     htmlFor="description"
-                    className="block text-sm font-medium text-gray-700 mb-2"
+                    className="block text-sm font-bold text-black mb-2 font-primary"
                   >
                     Description
                   </label>
@@ -384,7 +398,7 @@ const CampaignCreation: React.FC = () => {
                     id="description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+                    className="font-primary w-full px-4 py-3 bg-white border border-black/10 rounded-lg focus:ring-2 focus:ring-black/20 focus:border-black transition-all duration-200"
                     rows={4}
                     placeholder="Describe the purpose and goals of this campaign"
                   ></textarea>
@@ -394,29 +408,35 @@ const CampaignCreation: React.FC = () => {
           </div>
 
           {/* Phone Configuration Card */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mt-8">
-            <div className="p-6 border-b border-gray-100 bg-gray-50">
+          <div className="bg-white rounded-xl shadow-sm border border-black/5 overflow-hidden mt-8">
+            <div className="p-5 border-b border-black/5 bg-black/[0.02]">
               <div className="flex items-center">
-                <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center">
-                  <SmartphoneCharging className="w-6 h-6 text-white" />
+                <div className="w-12 h-12 bg-custom-purple/10 rounded-xl flex items-center justify-center">
+                  <PhoneIphone sx={{ fontSize: 24 }} className="text-black" />
                 </div>
                 <div className="ml-4">
-                  <h2 className="text-xl font-semibold text-gray-900">Phone Configuration</h2>
-                  <p className="text-sm text-gray-600">Set up your outbound calling preferences</p>
+                  <h2 className="text-xl font-bold text-black font-primary">
+                    Phone Configuration
+                  </h2>
+                  <p className="text-sm text-black/70 font-primary">
+                    Set up your outbound calling preferences
+                  </p>
                 </div>
               </div>
             </div>
 
             <div className="p-6 space-y-6">
-              <div className="flex items-start space-x-4 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
+              <div className="flex items-start space-x-4 p-4 bg-custom-yellow/5 rounded-xl border border-custom-yellow/10">
                 <div className="flex-shrink-0">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Bug className="w-5 h-5 text-blue-600" />
+                  <div className="w-10 h-10 bg-custom-yellow/10 rounded-lg flex items-center justify-center">
+                    <BugReport sx={{ fontSize: 20 }} className="text-black" />
                   </div>
                 </div>
                 <div className="flex-grow">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-900">Smart Local Touch</h3>
+                    <h3 className="text-lg font-bold text-black font-primary">
+                      Smart Local Touch
+                    </h3>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         id="localTouch"
@@ -425,11 +445,12 @@ const CampaignCreation: React.FC = () => {
                         onChange={(e) => setLocalTouchEnabled(e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      <div className="w-11 h-6 bg-black/20 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-custom-yellow/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-black/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-custom-yellow"></div>
                     </label>
                   </div>
-                  <p className="mt-1 text-sm text-gray-600">
-                    Automatically match outbound numbers with contact area codes to increase answer rates
+                  <p className="mt-1 text-sm text-black/70 font-primary">
+                    Automatically match outbound numbers with contact area codes
+                    to increase answer rates
                   </p>
                 </div>
               </div>
@@ -438,21 +459,25 @@ const CampaignCreation: React.FC = () => {
                 <div>
                   <label
                     htmlFor="outboundNumber"
-                    className="block text-sm font-medium text-gray-700 mb-2"
+                    className="block text-sm font-bold text-black mb-2 font-primary"
                   >
-                    Select Outbound Number <span className="text-red-500">*</span>
+                    Select Outbound Number{" "}
+                    <span className="text-custom-primary">*</span>
                   </label>
                   <div className="relative">
                     <select
                       id="outboundNumber"
                       value={outboundNumber}
                       onChange={(e) => setOutboundNumber(e.target.value)}
-                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 appearance-none"
+                      className="font-primary w-full px-4 py-3 bg-white border border-black/10 rounded-lg focus:ring-2 focus:ring-black/20 focus:border-black transition-all duration-200 appearance-none"
                       required={!localTouchEnabled}
                     >
                       <option value="">Choose a phone number</option>
                       {phoneNumbers.map((number) => (
-                        <option key={number.phone_number} value={number.phone_number}>
+                        <option
+                          key={number.phone_number}
+                          value={number.phone_number}
+                        >
                           {number.nickname
                             ? `${number.phone_number_pretty} (${number.nickname})`
                             : number.phone_number_pretty}
@@ -460,13 +485,17 @@ const CampaignCreation: React.FC = () => {
                       ))}
                     </select>
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                      <Phone className="w-5 h-5 text-gray-400" />
+                      <Phone sx={{ fontSize: 20 }} className="text-black/40" />
                     </div>
                   </div>
                   {phoneNumbers.length === 0 && (
-                    <p className="mt-2 text-sm text-amber-600 flex items-center">
-                      <AlertCircle className="h-4 w-4 mr-1" />
-                      No phone numbers available. Please add a phone number first.
+                    <p className="mt-2 text-sm text-black flex items-center font-primary">
+                      <Error
+                        sx={{ fontSize: 16 }}
+                        className="mr-1 text-custom-orange"
+                      />
+                      No phone numbers available. Please add a phone number
+                      first.
                     </p>
                   )}
                 </div>
@@ -475,39 +504,43 @@ const CampaignCreation: React.FC = () => {
           </div>
 
           {/* Contact Upload Card */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mt-8">
-            <div className="p-6 border-b border-gray-100 bg-gray-50">
+          <div className="bg-white rounded-xl shadow-sm border border-black/5 overflow-hidden mt-8">
+            <div className="p-5 border-b border-black/5 bg-black/[0.02]">
               <div className="flex items-center">
-                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                  <Upload className="w-6 h-6 text-green-600" />
+                <div className="w-12 h-12 bg-custom-orange/10 rounded-xl flex items-center justify-center">
+                  <CloudUpload sx={{ fontSize: 24 }} className="text-black" />
                 </div>
                 <div className="ml-4">
-                  <h2 className="text-xl font-semibold text-gray-900">Upload Contacts</h2>
-                  <p className="text-sm text-gray-600">Import your contact list from Excel</p>
+                  <h2 className="text-xl font-bold text-black font-primary">
+                    Upload Contacts
+                  </h2>
+                  <p className="text-sm text-black/70 font-primary">
+                    Import your contact list from Excel
+                  </p>
                 </div>
               </div>
             </div>
 
             <div className="p-6 space-y-6">
-              <label className="block text-sm font-medium text-gray-700 mb-4">
+              <label className="block text-sm font-bold text-black mb-4 font-primary">
                 Upload Contacts (Excel file)
               </label>
 
-              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+              <div className="bg-custom-purple/5 border-l-4 border-custom-purple p-4 mb-6">
                 <div className="flex">
                   <div className="flex-shrink-0">
-                    <Info className="h-5 w-5 text-blue-400" />
+                    <Info sx={{ fontSize: 20 }} className="text-black" />
                   </div>
                   <div className="ml-3">
-                    <h3 className="text-sm font-medium text-blue-800">
+                    <h3 className="text-sm font-bold text-black font-primary">
                       Excel File Requirements:
                     </h3>
-                    <div className="mt-2 text-sm text-blue-700">
+                    <div className="mt-2 text-sm text-black/70 font-primary">
                       <ol className="list-decimal list-inside space-y-1">
                         <li>
                           The title of the first column in the file should be
                           "Phone," and the title of the second column should be
-                          "Name."
+                          "Name".
                         </li>
                         <li>
                           The first column must contain valid phone numbers in
@@ -518,11 +551,13 @@ const CampaignCreation: React.FC = () => {
                           dynamic variables in the outbound call.
                         </li>
                         <li>
-                          There should be no spaces in the titles of any columns.
+                          There should be no spaces in the titles of any
+                          columns.
                         </li>
                       </ol>
                       <p className="mt-2 italic">
-                        Note: For XLSX files, only the first sheet will be imported.
+                        Note: For XLSX files, only the first sheet will be
+                        imported.
                       </p>
                     </div>
                   </div>
@@ -530,8 +565,8 @@ const CampaignCreation: React.FC = () => {
               </div>
 
               <div className="mb-6">
-                <h4 className="flex items-center text-sm font-medium text-gray-700 mb-2">
-                  <Table className="h-4 w-4 mr-2" />
+                <h4 className="flex items-center text-sm font-bold text-black mb-2 font-primary">
+                  <TableChart sx={{ fontSize: 16 }} className="mr-2" />
                   Example Excel Format:
                 </h4>
                 <ExcelFormatExample />
@@ -541,39 +576,51 @@ const CampaignCreation: React.FC = () => {
                 {...getRootProps()}
                 className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 ${
                   isDragActive
-                    ? "border-blue-500 bg-blue-50/50"
-                    : "border-gray-300 hover:border-blue-400"
+                    ? "border-custom-primary bg-custom-primary/5"
+                    : "border-black/20 hover:border-custom-primary/50"
                 }`}
               >
                 <input {...getInputProps()} />
                 <div className="space-y-4">
-                  <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
-                    <Upload className={`w-8 h-8 ${
-                      isDragActive ? "text-blue-500" : "text-gray-400"
-                    }`} />
+                  <div className="w-16 h-16 mx-auto bg-black/5 rounded-full flex items-center justify-center">
+                    <CloudUpload
+                      sx={{ fontSize: 32 }}
+                      className={`${
+                        isDragActive ? "text-custom-primary" : "text-black/40"
+                      }`}
+                    />
                   </div>
                   <div>
-                    <p className="text-lg font-medium text-gray-700">
+                    <p className="text-lg font-bold text-black font-primary">
                       Drop your Excel file here
                     </p>
-                    <p className="text-sm text-gray-500">
-                      or <span className="text-blue-500">browse</span> to choose a file
+                    <p className="text-sm text-black/70 font-primary">
+                      or{" "}
+                      <span className="text-custom-primary font-bold">
+                        browse
+                      </span>{" "}
+                      to choose a file
                     </p>
                   </div>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-black/50 font-primary">
                     Supports: XLSX, XLS (max 10MB)
                   </p>
                 </div>
               </div>
               {fileName && (
-                <div className="bg-green-50 rounded-lg p-4 animate-fade-in">
+                <div className="bg-custom-yellow/5 rounded-lg p-4 animate-fade-in border border-custom-yellow/10">
                   <div className="flex items-center">
-                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                      <FileText className="w-5 h-5 text-green-600" />
+                    <div className="w-10 h-10 bg-custom-yellow/10 rounded-lg flex items-center justify-center">
+                      <Description
+                        sx={{ fontSize: 20 }}
+                        className="text-black"
+                      />
                     </div>
                     <div className="ml-3">
-                      <p className="text-sm font-medium text-green-800">{fileName}</p>
-                      <p className="text-xs text-green-600">
+                      <p className="text-sm font-bold text-black font-primary">
+                        {fileName}
+                      </p>
+                      <p className="text-xs text-black/70 font-primary">
                         {contacts.length} contacts loaded successfully
                       </p>
                     </div>
@@ -585,12 +632,12 @@ const CampaignCreation: React.FC = () => {
 
           {error && (
             <div
-              className="bg-red-50 rounded-lg p-4 mt-8 animate-fade-in"
+              className="bg-custom-primary/5 rounded-lg p-4 mt-8 animate-fade-in border border-custom-primary/10"
               role="alert"
             >
               <div className="flex items-center">
-                <AlertCircle className="w-5 h-5 text-red-500" />
-                <p className="ml-3 text-sm text-red-700">{error}</p>
+                <Error sx={{ fontSize: 20 }} className="text-black" />
+                <p className="ml-3 text-sm text-black font-primary">{error}</p>
               </div>
             </div>
           )}
@@ -599,20 +646,17 @@ const CampaignCreation: React.FC = () => {
             <button
               type="submit"
               disabled={isCreating}
-              className="inline-flex items-center px-6 py-3 bg-black text-white rounded-lg hover:bg-black/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 font-medium shadow-sm hover:shadow transform hover:-translate-y-0.5"
+              className="inline-flex items-center px-6 py-3 bg-custom-primary text-white rounded-lg hover:bg-custom-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-primary transition-all duration-200 font-bold shadow-sm hover:shadow transform hover:-translate-y-0.5 font-primary"
             >
               {isCreating ? (
                 <>
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
+                  <div className="animate-spin -ml-1 mr-3 h-5 w-5 text-white border-2 border-white border-t-transparent rounded-full"></div>
                   Creating Campaign...
                 </>
               ) : (
                 <>
                   Create Campaign
-                  <CheckSquare className="ml-2 w-5 h-5" />
+                  <CheckBox sx={{ fontSize: 20 }} className="ml-2" />
                 </>
               )}
             </button>
